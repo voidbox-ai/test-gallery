@@ -2,10 +2,243 @@
 <html lang="en-us">
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity web deploy test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0d12">
+    <meta name="description" content="Unity WebGL application">
+    <title>20260929-hj</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
+
+    <style>
+      :root {
+        --bg: #080a0f;
+        --panel: rgba(18, 21, 29, 0.82);
+        --panel-border: rgba(255,255,255,.09);
+        --text: #f4f6fa;
+        --muted: #8f98a8;
+        --accent: #7c8cff;
+        --accent-2: #a78bfa;
+        --shadow: 0 28px 80px rgba(0,0,0,.48);
+        --radius: 20px;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      body {
+        min-height: 100dvh;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 50% -10%, rgba(124,140,255,.17), transparent 34%),
+          radial-gradient(circle at 85% 80%, rgba(167,139,250,.09), transparent 30%),
+          var(--bg);
+        font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: .035;
+        background-image:
+          linear-gradient(rgba(255,255,255,.7) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,.7) 1px, transparent 1px);
+        background-size: 48px 48px;
+        mask-image: linear-gradient(to bottom, black, transparent 75%);
+      }
+
+      #unity-container {
+        position: relative;
+        width: min(1280px, calc(100vw - 48px));
+        height: min(800px, calc(100dvh - 48px));
+        margin: 24px auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        border: 1px solid var(--panel-border);
+        border-radius: var(--radius);
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+      }
+
+      #unity-container::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(
+          135deg,
+          rgba(255,255,255,.045),
+          transparent 28%,
+          transparent 72%,
+          rgba(124,140,255,.035)
+        );
+      }
+
+      #unity-canvas {
+        display: block;
+        width: min(100%, 1200px);
+        height: auto;
+        aspect-ratio: 16 / 10;
+        max-height: calc(100% - 64px);
+        object-fit: contain;
+        background: #05070a;
+        border-radius: 12px;
+        box-shadow: 0 16px 50px rgba(0,0,0,.35);
+        outline: none;
+      }
+
+      #unity-footer {
+        position: absolute;
+        left: 20px;
+        right: 20px;
+        bottom: 16px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        pointer-events: none;
+        z-index: 5;
+      }
+
+      #unity-logo-title-footer,
+      #unity-logo {
+        display: none;
+      }
+
+      #unity-build-title {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        opacity: .72;
+      }
+
+      #unity-fullscreen-button {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,.12);
+        background: rgba(255,255,255,.06);
+        cursor: pointer;
+        pointer-events: auto;
+        transition: transform .2s ease, background .2s ease, border-color .2s ease;
+        position: relative;
+      }
+
+      #unity-fullscreen-button::before {
+        content: "⛶";
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: #e9ecf5;
+        font-size: 20px;
+        line-height: 1;
+      }
+
+      #unity-fullscreen-button:hover {
+        transform: translateY(-1px);
+        background: rgba(124,140,255,.18);
+        border-color: rgba(124,140,255,.45);
+      }
+
+      #unity-loading-bar {
+        position: absolute;
+        z-index: 20;
+        width: min(360px, calc(100% - 48px));
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        padding: 22px;
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 16px;
+        background: rgba(10,12,17,.82);
+        box-shadow: 0 20px 60px rgba(0,0,0,.4);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+      }
+
+      #unity-progress-bar-empty {
+        width: 100%;
+        height: 6px;
+        overflow: hidden;
+        border-radius: 99px;
+        background: rgba(255,255,255,.08);
+      }
+
+      #unity-progress-bar-full {
+        width: 0%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        box-shadow: 0 0 18px rgba(124,140,255,.4);
+        transition: width .15s ease;
+      }
+
+      #unity-warning {
+        position: absolute;
+        top: 16px;
+        left: 50%;
+        z-index: 30;
+        width: min(560px, calc(100% - 32px));
+        transform: translateX(-50%);
+        color: #fff;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      #unity-warning > div {
+        border-radius: 12px !important;
+        padding: 12px 16px !important;
+        background: rgba(20, 23, 31, .94) !important;
+        border: 1px solid rgba(255,190,80,.35);
+        box-shadow: 0 12px 30px rgba(0,0,0,.3);
+      }
+
+      @media (max-width: 700px) {
+        #unity-container {
+          width: 100%;
+          height: 100dvh;
+          margin: 0;
+          border: 0;
+          border-radius: 0;
+          background: #05070a;
+        }
+
+        #unity-canvas {
+          width: 100%;
+          max-height: 100%;
+          border-radius: 0;
+          box-shadow: none;
+        }
+
+        #unity-footer {
+          left: 14px;
+          right: 14px;
+          bottom: max(12px, env(safe-area-inset-bottom));
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          transition: none !important;
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="unity-container" class="unity-desktop">
